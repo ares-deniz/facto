@@ -1,0 +1,34 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies / build
+node_modules
+dist
+dist-ssr
+coverage
+
+# Env files (keep secrets out of git)
+.env
+.env.*
+!.env.example
+
+# OS / Editor junk
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vercel local metadata
+.vercel

@@ -33,15 +33,12 @@ import logo from '../assets/facto-white.png';
 type Plan = 'monthly' | 'yearly';
 type CreateSessionResponse = { url: string } | { error: string };
 
-// ---------- API BASE URL ----------
-const API_BASE = import.meta.env.DEV
-  ? 'http://localhost:8787' // local backend for dev
-  : 'https://backend.vercel.app'; // production backend on Vercel
-
 // ---------- Helper: confirm a Stripe session on your backend ----------
 async function confirmStripeSession(sessionId: string) {
   const res = await fetch(
-    `${API_BASE}/checkout/confirm?session_id=${encodeURIComponent(sessionId)}`
+    `${
+      import.meta.env.VITE_API_URL
+    }/api/checkout/confirm?session_id=${encodeURIComponent(sessionId)}`
   );
   if (!res.ok) throw new Error('Confirmation Stripe invalide');
   // expected response: { ok: true, uid?: string, plan?: 'monthly' | 'yearly' }
@@ -187,6 +184,7 @@ const Home = () => {
           const pending = sessionStorage.getItem('facto_pending_download');
           if (pending === '1') {
             sessionStorage.removeItem('facto_pending_download');
+            // restore choices before auto-download
             restorePendingState(setTemplate, setInvoiceData);
             setTimeout(() => handleDownloadPDF(), 150);
             clearPendingState();
@@ -224,6 +222,7 @@ const Home = () => {
     const sessionId = sessionStorage.getItem('facto_premium_session');
 
     if (sessionId) {
+      // Verify session now that user is known
       (async () => {
         try {
           toast.loading('Validation de votre abonnement…');
@@ -238,6 +237,7 @@ const Home = () => {
           const dl = sessionStorage.getItem('facto_pending_download');
           if (dl === '1') {
             sessionStorage.removeItem('facto_pending_download');
+            // restore choices before auto-download
             restorePendingState(setTemplate, setInvoiceData);
             setTimeout(() => handleDownloadPDF(), 150);
             clearPendingState();
@@ -254,6 +254,7 @@ const Home = () => {
         }
       })();
     } else {
+      // No sessionId → success flag path
       localStorage.setItem(premiumKey, 'true');
       setIsPremium(true);
       setShowPayModal(false);
@@ -261,6 +262,7 @@ const Home = () => {
       const dl = sessionStorage.getItem('facto_pending_download');
       if (dl === '1') {
         sessionStorage.removeItem('facto_pending_download');
+        // restore choices before auto-download
         restorePendingState(setTemplate, setInvoiceData);
         setTimeout(() => handleDownloadPDF(), 150);
         clearPendingState();
@@ -281,6 +283,7 @@ const Home = () => {
       return;
     }
 
+    // Save current template & invoice so we restore them after Stripe
     savePendingState(template, invoiceData);
 
     sessionStorage.setItem('facto_pending_download', '1');
@@ -296,12 +299,14 @@ const Home = () => {
       }
 
       toast.loading('Redirection vers Stripe…');
-      const res = await fetch(`${API_BASE}/create-checkout-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, userId: user.uid, email: user.email }),
-      });
-
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/create-checkout-session`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan, uid: user.uid, email: user.email }),
+        }
+      );
       const data: CreateSessionResponse = await res.json();
       toast.dismiss();
 
@@ -398,7 +403,7 @@ const Home = () => {
             </div>
             <div className="bg-gray-400 w-10 h-[1.2px] rotate-90 hidden sm:block" />
             <Link to="/conditiongenerale">
-              <p className="text-muted-foreground hover:text-zinc-400 transition-all duration-300 cursor-pointer hidden sm:block text-sm">
+              <p className="text-muted-foreground  hover:text-zinc-400 transition-all duration-300 cursor-pointer hidden sm:block text-sm">
                 Conditions générales
               </p>
             </Link>
