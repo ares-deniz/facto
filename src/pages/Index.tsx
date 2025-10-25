@@ -299,14 +299,12 @@ const Home = () => {
       }
 
       toast.loading('Redirection vers Stripe…');
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/create-checkout-session`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plan, uid: user.uid, email: user.email }),
-        }
-      );
+      const res = await fetch(`/api/create-checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, userId: user.uid, email: user.email }), // <-- send userId (not uid)
+      });
+
       const data: CreateSessionResponse = await res.json();
       toast.dismiss();
 
