@@ -1,8 +1,5 @@
 {
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://facto-server.vercel.app/$1"
-    }
+    { "source": "/api/(.*)", "destination": "https://backend.vercel.app/$1" }
   ]
 }
