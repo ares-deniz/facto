@@ -5,21 +5,35 @@ const stripe = new Stripe(process.env.STRIPE_SK as string, {
   apiVersion: '2024-06-20',
 });
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS
+// --- CORS helper ---
+function applyCors(req: VercelRequest, res: VercelResponse) {
+  const allowedOrigins = [
+    'https://facto.cloud',
+    'https://www.facto.cloud',
+  ];
+  const origin = req.headers.origin as string | undefined;
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin'); // ensure correct caching per-origin
+  }
+
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'Content-Type, Authorization, X-Requested-With, Accept'
   );
 
-  // Handle preflight
   if (req.method === 'OPTIONS') {
     res.status(200).end();
-    return;
+    return true; // stop further handling
   }
+  return false;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -35,10 +49,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Retrieve the session from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    // Check if payment was successful
     if (session.payment_status === 'paid') {
       return res.status(200).json({
         ok: true,
