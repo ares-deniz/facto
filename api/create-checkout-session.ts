@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SK as string, {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_URL || '*');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader(
     'Access-Control-Allow-Methods',
     'GET,OPTIONS,PATCH,DELETE,POST,PUT'
