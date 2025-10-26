@@ -36,9 +36,7 @@ type CreateSessionResponse = { url: string } | { error: string };
 // ---------- Helper: confirm a Stripe session on your backend ----------
 async function confirmStripeSession(sessionId: string) {
   const res = await fetch(
-    `${
-      import.meta.env.VITE_API_URL
-    }/api/checkout/confirm?session_id=${encodeURIComponent(sessionId)}`
+    `/api/checkout/confirm?session_id=${encodeURIComponent(sessionId)}`
   );
   if (!res.ok) throw new Error('Confirmation Stripe invalide');
   // expected response: { ok: true, uid?: string, plan?: 'monthly' | 'yearly' }
@@ -290,38 +288,36 @@ const Home = () => {
     setShowPayModal(true);
   };
 
-  const goPremium = async (plan: Plan) => {
-    try {
-      if (!user) {
-        toast.message('Veuillez vous connecter pour continuer.');
-        navigate('/', { replace: true });
-        return;
-      }
-
-      toast.loading('Redirection vers Stripe…');
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/create-checkout-session`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plan, uid: user.uid, email: user.email }),
-        }
-      );
-      const data: CreateSessionResponse = await res.json();
-      toast.dismiss();
-
-      if (!('url' in data)) {
-        const errMsg = 'error' in data ? data.error : 'Pas d’URL de session';
-        throw new Error(errMsg);
-      }
-      window.location.href = data.url;
-    } catch (e: unknown) {
-      toast.dismiss();
-      toast.error(
-        e instanceof Error ? e.message : 'Échec de la redirection Stripe'
-      );
+const goPremium = async (plan: Plan) => {
+  try {
+    if (!user) {
+      toast.message('Veuillez vous connecter pour continuer.');
+      navigate('/', { replace: true });
+      return;
     }
-  };
+
+    toast.loading('Redirection vers Stripe…');
+    const res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan, uid: user.uid, email: user.email }),
+    });
+    const data: CreateSessionResponse = await res.json();
+    toast.dismiss();
+
+    if (!('url' in data)) {
+      const errMsg = 'error' in data ? data.error : 'Pas d’URL de session';
+      throw new Error(errMsg);
+    }
+    window.location.href = data.url;
+  } catch (e: unknown) {
+    toast.dismiss();
+    toast.error(
+      e instanceof Error ? e.message : 'Échec de la redirection Stripe'
+    );
+  }
+};
+
 
   const handleDownloadPDF = async () => {
     if (!previewRef.current) return;
