@@ -5,24 +5,30 @@ const stripe = new Stripe(process.env.STRIPE_SK as string, {
   apiVersion: '2024-06-20',
 });
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET,OPTIONS,PATCH,DELETE,POST,PUT'
-  );
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+// --- CORS helper ---
+function applyCors(req: VercelRequest, res: VercelResponse) {
+  const allowedOrigins = [
+    'https://facto.cloud',
+    'https://www.facto.cloud',
+  ];
+  const origin = req.headers.origin as string | undefined;
 
-  // Handle preflight
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
   if (req.method === 'OPTIONS') {
     res.status(200).end();
-    return;
+    return true; // stop here for preflight
   }
+  return false;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -43,7 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Build redirect URLs
-    const base = process.env.CLIENT_URL || 'https://facto-nine.vercel.app';
+    const base = process.env.CLIENT_URL || 'https://www.facto.cloud';
     const path = process.env.CLIENT_PATH || '/home';
     const redirectBase = `${base}${path}`;
 
