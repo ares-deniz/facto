@@ -5,11 +5,11 @@ const stripe = new Stripe(process.env.STRIPE_SK as string, {
   apiVersion: '2024-06-20',
 });
 
-// --- CORS helper ---
+// --- CORS helper (allow www + apex) ---
 function applyCors(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
-    'https://facto.cloud',
     'https://www.facto.cloud',
+    'https://facto.cloud',
   ];
   const origin = req.headers.origin as string | undefined;
 
@@ -48,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Build redirect URLs
+    // Use your public site as base (already set in Vercel)
     const base = process.env.CLIENT_URL || 'https://www.facto.cloud';
     const path = process.env.CLIENT_PATH || '/home';
     const redirectBase = `${base}${path}`;
