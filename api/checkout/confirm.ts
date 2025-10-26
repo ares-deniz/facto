@@ -5,29 +5,24 @@ const stripe = new Stripe(process.env.STRIPE_SK as string, {
   apiVersion: '2024-06-20',
 });
 
-// --- CORS helper ---
+// --- CORS helper (allow www + apex) ---
 function applyCors(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
-    'https://facto.cloud',
     'https://www.facto.cloud',
+    'https://facto.cloud',
   ];
   const origin = req.headers.origin as string | undefined;
 
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin'); // ensure correct caching per-origin
+    res.setHeader('Vary', 'Origin');
   }
-
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-Requested-With, Accept'
-  );
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
-    return true; // stop further handling
+    return true; // stop here for preflight
   }
   return false;
 }
